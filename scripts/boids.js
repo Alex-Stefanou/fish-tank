@@ -11,17 +11,17 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xffffff );
 
 /* Add Camera and Lighting */
-const camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.z = 10;
+const camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.position.z = 12;
 
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-directionalLight.position.set( 0, 0, 10 );
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.75 );
+directionalLight.position.set( -2, -2, 12 );
 directionalLight.castShadow = true;
 scene.add( directionalLight );
 
 /* Add background plane */
 let geometry = new THREE.PlaneGeometry( 100, 100 );
-let material = new THREE.MeshLambertMaterial( {color: 0xccccff } );
+let material = new THREE.MeshLambertMaterial( {color: 0xD6EAF8 } );
 let plane = new THREE.Mesh( geometry, material );
 plane.receiveShadow = true;
 plane.position.set(0, 0, -5);
@@ -29,7 +29,7 @@ scene.add( plane );
 
 /* Add subject */
 const fish = []
-for(let i=0; i<100; i++) {
+for(let i=0; i<60; i++) {
     fish.push(new Fish(scene));
 }
 

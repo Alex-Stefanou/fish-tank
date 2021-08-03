@@ -15,6 +15,6 @@
 	background-color: rgba(0,0,0,0.5);
 	padding: 1rem;
 	height: 200px;
-	width: 300px;
+	width: 200px;
 }
 </style>

@@ -10,17 +10,18 @@ class Fish {
     turn_status = 0;
 
     init() {
-        const geometry = new THREE.ConeGeometry(0.3, 1, 20);
-        const material = new THREE.MeshLambertMaterial( { color: 0x0066ff } );
+        const color = [0xF1948A, 0xA569BD, 0xF7DC6F  ];
+        const geometry = new THREE.ConeGeometry(0.4, 1.2, 20);
+        const material = new THREE.MeshLambertMaterial( { color: color[Math.floor(this.rand_range(0,2))] } );
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.rotation.z = this.rand_range(0,2*Math.PI);
     }
 
     rand_range(min=0, max=0) {
-        return Math.random()*(max-min) + min;
+        return Math.random()*(max-min+1) + min;
     }
 
-    swim(speed=0.012) {
+    swim(speed=0.014) {
         if (this.turn_status === 0) this.t_last_turn++;
         if (this.turn_status !== 0 || this.t_last_turn > 100) this.turn();
 
@@ -32,10 +33,12 @@ class Fish {
         if (this.turn_status === 0) {
             this.turn_status = Math.floor(this.rand_range(-5,5));
             this.t_last_turn = 0;
-        } else if (this.t_last_turn > 100) {
-            this.turn_status = 0;
+        } else if (this.t_last_turn > 60) {
+            this.turn_status += Math.floor(this.rand_range(-1,1));
+            if(this.turn_status > 5 || this.turn_status <-5) this.turn_status = Math.floor(this.rand_range(-5,5));
+            this.t_last_turn = 0;
         } else {
-            this.mesh.rotation.z += 0.0025 * this.turn_status;
+            this.mesh.rotation.z += 0.002 * this.turn_status;
         }
         this.t_last_turn++;
     }
