@@ -2,11 +2,14 @@
 	<h1>Controls</h1>
 	<div class="slidecontainer">
 		Number of fish: {num_fish}
-		<input type=range bind:value={num_fish} min=1 max=1000 class="slider">
+		<input type=range bind:value={num_fish} min=1 max=100 class="slider">
 	  </div>
 	<button on:click={render}>Apply</button>
+	<button on:click={stop}>stop</button>
 	<p>
-		<em>IF IT GETS SLOW, REFRESH PAGE! I don't clear the memory properly.</em>
+		Sort of working bounds, unfortuantely they keep tunneling out 🤔
+		<br>
+		<em>If it starts to lag, refresh the page.</em>
 	</p>
 </div>
 
@@ -14,11 +17,14 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	
-	let num_fish = 60;
+	let num_fish = 10;
 
 	const render = () => {
 		dispatch('controls_apply', num_fish);
-	}
+	};
+	const stop = () => {
+		dispatch('halt');
+	};
 </script>
 
 <style>
