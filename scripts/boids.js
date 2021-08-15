@@ -13,6 +13,12 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 
 
+let geometry = new THREE.BoxGeometry(5, 5, 5);
+let material = new THREE.MeshLambertMaterial({color: 0x00ff00 });
+let cube = new THREE.Mesh(geometry, material);
+cube.castShadow = true;
+scene.add(cube);
+
 let j = 0
 /* Begin Render */
 const render = (num_fish) => {
@@ -34,7 +40,8 @@ const render = (num_fish) => {
         requestAnimationFrame(animate);
     
         fish.forEach(f => f.animate());
-    
+        cube.rotation.z += 0.01;
+        cube.rotation.y += 0.005;
         renderer.render(scene, camera);
     };
 

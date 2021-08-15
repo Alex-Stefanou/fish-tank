@@ -51,7 +51,7 @@ const initialise_scene = (scene) => {
     // console.log(boundary);
     
     /* Add Lighting */
-    const directionalLightA = new THREE.DirectionalLight(0xffffff, 0.7);
+    const directionalLightA = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLightA.position.set(-4, -4, z_camera/4);
     directionalLightA.castShadow = true;
     directionalLightA.shadow.camera = new THREE.OrthographicCamera(boundary.left, boundary.right, boundary.top, boundary.bottom);
