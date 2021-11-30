@@ -21,7 +21,6 @@ const initialise_scene = (scene) => {
     const camera = new THREE.PerspectiveCamera(FOV, aspect_ratio, 0.1, 1000);
     camera.position.z = z_camera;
 
-
     /* Add background plane */
     let surface_y = 2 * (z_camera + Math.abs(z_floor)) * Math.tan(toRads(FOV)/2);
     let surface_x = surface_y * aspect_ratio;

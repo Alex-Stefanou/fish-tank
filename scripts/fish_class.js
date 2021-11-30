@@ -3,7 +3,7 @@ import * as THREE from 'three';
 class Fish {
     _angular_speed = 0.04; //radians that can be taken in a step
     _boundary_influence_range = {surface: 0.1, depth: 1, edge: 5};
-    _front; // The local direction - Vector3 pointing out the front of the fish on frame 0;
+    _front; // The local direction - Vector3 pointing out the front of the fish on frame 0
     _linear_speed = 0.025;
     _max_influence_strength = 100;
     // _max_force_magnitude = Math.sqrt(3 * (this._max_influence_strength**2));
