@@ -5,7 +5,7 @@ const canvas_x = window.innerWidth;
 
 const FOV = 90;
 const z_camera = 12;
-const z_floor = -2;
+const z_floor = -2.5;
 
 const aspect_ratio = canvas_x / canvas_y;
 const texture_sand = new THREE.TextureLoader().load('./assets/textures/underwater-sand.jpg');

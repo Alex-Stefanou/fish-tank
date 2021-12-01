@@ -8,7 +8,7 @@
 	const halt = () => {
 		boids.reset();
 	};
-	
+
 	const rerender = (event) => {
 		boids.reset();
 		boids.render(event.detail);

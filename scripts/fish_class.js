@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 
 class Fish {
-    _angular_speed = 0.04; //radians that can be taken in a step
+    _angular_speed = 0.03; //radians that can be taken in a step
     _boundary_influence_range = {surface: 0.1, depth: 1, edge: 5};
     _front; // The local direction - Vector3 pointing out the front of the fish on frame 0
-    _linear_speed = 0.025;
+    _linear_speed = 0.03;
     _max_influence_strength = 100;
     // _max_force_magnitude = Math.sqrt(3 * (this._max_influence_strength**2));
-    _true_north = new THREE.Vector3(0,1,0); // The world direction
+    _true_north = new THREE.Vector3(0,1,0); // The world direction (upwards on the webpage)
 
     constructor(scene, boundary) {
         this._boundary = boundary;
@@ -37,7 +37,8 @@ class Fish {
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
 
-        this._front = new THREE.Vector3(this.rand_range(-1,1),this.rand_range(-1,1),this.rand_range(-1,1)).normalize();
+        this._front = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,1)).normalize();
+        // this._front = new THREE.Vector3(0, -1, 0).normalize();
         const front_quaterntion = new THREE.Quaternion().setFromUnitVectors(this._true_north, this._front);
         this.mesh.setRotationFromQuaternion(front_quaterntion);
     }
@@ -99,11 +100,13 @@ class Fish {
             for (const key in this.influence.source) {
                 influences.push(this.influence.source[key]());
             }
+            // console.log(influences);
+
             let sum = new THREE.Vector3();
             influences.forEach(influence => {
                 sum.add(influence);
             });
-            return sum;
+            return sum.normalize();
         },
         source: {
             boundary_surface: () => {
@@ -153,9 +156,9 @@ class Fish {
     }
 
     turn(target_dir) {
-        const force_magnitude = this.magnitude(target_dir);
-        target_dir.normalize();
-        const quaternion_target = new THREE.Quaternion().setFromUnitVectors(this._front, target_dir);
+        // const force_magnitude = this.magnitude(target_dir);
+        // target_dir.normalize();
+        const quaternion_target = new THREE.Quaternion().setFromUnitVectors(this._true_north, target_dir);
 
         let current_direction_quaternion = this.mesh.quaternion;
         current_direction_quaternion.rotateTowards(quaternion_target, this._angular_speed);
