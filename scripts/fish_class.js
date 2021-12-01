@@ -9,7 +9,8 @@ class Fish {
     // _max_force_magnitude = Math.sqrt(3 * (this._max_influence_strength**2));
     _true_north = new THREE.Vector3(0,1,0); // The world direction (upwards on the webpage)
 
-    constructor(scene, boundary) {
+    constructor(id, scene, boundary) {
+        this.id = id;
         this._boundary = boundary;
         this._init();
         scene.add(this.mesh);
@@ -29,6 +30,10 @@ class Fish {
         return this.mesh.position;
     }
 
+    set shoal(array_of_fish) {
+        this._shoal = array_of_fish.filter(fish => fish.id !== this.id);
+    }
+
     _init() {
         const color = [0xF1948A, 0xA569BD, 0xF7DC6F];
         const geometry = new THREE.ConeGeometry(0.6, 1.8, 32);
@@ -38,7 +43,6 @@ class Fish {
         this.mesh.receiveShadow = true;
 
         this._front = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,1)).normalize();
-        // this._front = new THREE.Vector3(0, -1, 0).normalize();
         const front_quaterntion = new THREE.Quaternion().setFromUnitVectors(this._true_north, this._front);
         this.mesh.setRotationFromQuaternion(front_quaterntion);
     }
@@ -109,6 +113,15 @@ class Fish {
             return sum.normalize();
         },
         source: {
+            // Alignment: () => {
+            //     // Alignment: Steer towards the average heading of local boids
+            // },
+            // Cohesion: () => {
+            //     // Cohesion: Steer toward center of mass of local boids
+            // },
+            // Separation: () => {
+            //     // Separation: Stear to avoid local boids
+            // },
             boundary_surface: () => {
                 const separation = this._boundary.surface - this.mesh.position.z;
                 const force = this._boundary_force.surface(separation);

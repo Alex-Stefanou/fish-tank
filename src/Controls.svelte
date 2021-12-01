@@ -5,10 +5,8 @@
 		<input type=range bind:value={num_fish} min=1 max=100 class="slider">
 	  </div>
 	<button on:click={render}>Apply</button>
-	<button on:click={stop}>stop</button>
+	<button on:click={stop}>Stop</button>
 	<p>
-		Sort of working bounds, unfortuantely they keep tunneling out 🤔
-		<br>
 		<em>If it starts to lag, refresh the page.</em>
 	</p>
 </div>
@@ -34,7 +32,7 @@
 	left: 20px;
 	border-radius: 16px;
 
-	background-color: rgba(255,255,255,0.7);
+	background-color: rgba(255,255,255,0.5);
 	padding: 1rem;
 	width: 240px;
 }

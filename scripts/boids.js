@@ -20,14 +20,17 @@ const render = (num_fish) => {
     const {boundary, camera} = initialise_scene(scene);
 
     const fish = [];
+
     for(let i=0; i<num_fish; i++) {
-        fish.push(new Fish(scene, boundary));
+        fish.push(new Fish(i, scene, boundary));
     }
+
+    fish.forEach(f => f.shoal = fish);
 
     /* animate subject */
     const animate = function () {
         if (stop) return;
-        
+
         j++;
         // if (j>10) stop = true;
 

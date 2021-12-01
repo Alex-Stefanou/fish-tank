@@ -5,7 +5,7 @@ const canvas_x = window.innerWidth;
 
 const FOV = 90;
 const z_camera = 12;
-const z_floor = -2.5;
+const z_floor = -4;
 
 const aspect_ratio = canvas_x / canvas_y;
 const texture_sand = new THREE.TextureLoader().load('./assets/textures/underwater-sand.jpg');
@@ -47,7 +47,6 @@ const initialise_scene = (scene) => {
     boundary.left   = -boundary.right;
     boundary.surface= 0;
     boundary.depth  = z_floor;
-    // console.log(boundary);
     
     /* Add Lighting */
     const directionalLightA = new THREE.DirectionalLight(0xffffff, 0.8);
