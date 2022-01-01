@@ -3,7 +3,7 @@
 <script>
 	import Controls from './Controls.svelte';
 	import boids from '../scripts/boids.js';
-	boids.render(10);
+	boids.render(12);
 
 	const halt = () => {
 		boids.reset();

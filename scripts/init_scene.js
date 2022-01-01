@@ -3,9 +3,9 @@ import * as THREE from 'three';
 const canvas_y = window.innerHeight;
 const canvas_x = window.innerWidth;
 
-const FOV = 90;
-const z_camera = 12;
-const z_floor = -4;
+const FOV = 60;
+const z_camera = 20;
+const z_floor = -5;
 
 const aspect_ratio = canvas_x / canvas_y;
 const texture_sand = new THREE.TextureLoader().load('./assets/textures/underwater-sand.jpg');

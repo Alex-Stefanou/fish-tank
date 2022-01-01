@@ -1,13 +1,29 @@
 import * as THREE from 'three';
 
 class Fish {
-    _angular_speed = 0.03; //radians that can be taken in a step
-    _boundary_influence_range = {surface: 0.1, depth: 1, edge: 5};
-    _front; // The local direction - Vector3 pointing out the front of the fish on frame 0
-    _linear_speed = 0.03;
-    _max_influence_strength = 100;
-    // _max_force_magnitude = Math.sqrt(3 * (this._max_influence_strength**2));
-    _true_north = new THREE.Vector3(0,1,0); // The world direction (upwards on the webpage)
+    //Const fish properties
+    _true_north = new THREE.Vector3(0,1,0); // Normalized world direction (upwards on the webpage)
+    _boundary_influence_range = {surface: 1, depth: 1, edge: 4};
+    _minimum_speed = 0.01;
+    _maximum_speed = 0.08;
+    _maximum_angular_speed = 0.08; // Max radians that can be turned in a frame
+    _max_influence_strength = 12;
+    _max_rules_strength = 4;
+    _drag = { // Speeds at which drag becomes constant
+        lower: {coefficient: 1, speed: 0.02},
+        upper: {coefficient: 0.2, speed: 0.5},
+    };
+
+    _rules_coefficient = {
+        alignment: 0.1,
+        cohesion: 0.2,
+        separation: 0.5,
+    };
+    _vision_range = 12;
+
+    //Public and private variable properties
+    id;
+    _velocity = new THREE.Vector3();
 
     constructor(id, scene, boundary) {
         this.id = id;
@@ -16,23 +32,34 @@ class Fish {
         scene.add(this.mesh);
     }
 
-    /**
-     * @returns Vector3 of the direction the mesh is currently facing.
-     */
     get direction() {
-        return new THREE.Vector3().copy(this._true_north).applyQuaternion(this.mesh.quaternion);
+        return this._velocity.normalize();
     }
-    
-    /**
-     * @returns Vector3 of mesh position in world.
-     */
+    set direction(new_direction) {
+        const normalized_new_direction = new_direction.clone().normalize(); // Copied to not mutate original
+        const new_direction_quaternion = new THREE.Quaternion().setFromUnitVectors(this._true_north, normalized_new_direction);
+        this.mesh.setRotationFromQuaternion(new_direction_quaternion);
+    }
+
     get position() {
         return this.mesh.position;
+    }
+    set position(new_position) {
+        this.mesh.position.set(new_position.x, new_position.y, new_position.z);
     }
 
     set shoal(array_of_fish) {
         this._shoal = array_of_fish.filter(fish => fish.id !== this.id);
     }
+    
+    get velocity() {
+        return this._velocity;
+    }
+    set velocity(new_velocity) {
+        this.direction = new_velocity;
+        this._velocity = new_velocity.clone().clampLength(this._minimum_speed, this._maximum_speed);
+    }
+    
 
     _init() {
         const color = [0xF1948A, 0xA569BD, 0xF7DC6F];
@@ -42,9 +69,12 @@ class Fish {
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
 
-        this._front = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,1)).normalize();
-        const front_quaterntion = new THREE.Quaternion().setFromUnitVectors(this._true_north, this._front);
-        this.mesh.setRotationFromQuaternion(front_quaterntion);
+        const initial_position = new THREE.Vector3(0, 0, -2);
+        // const initial_velocity = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,0));
+        const initial_velocity = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), 0);
+        // const initial_velocity = new THREE.Vector3(1, 1, 0);
+        this.position = initial_position;
+        this.velocity = initial_velocity;
     }
 
     _boundary_force = {
@@ -83,45 +113,70 @@ class Fish {
         }
     }
 
-    magnitude(Vector3) {
-        return Math.sqrt(Vector3.x ** 2 + Vector3.y ** 2 + Vector3.z ** 2);
-    }
-
     rand_range(min=0, max=0) {
         return Math.random()*(max-min+1) + min;
     }
 
     animate() {
-        this.swim();
+        this.update_velocity();
+        this.update_position();
     }
 
     influence = {
         /**
-         * @returns Vector3: a sum of all influence vectors
+         * @returns Vector3: a sum of all influence vectors from source prop
          */
         compute: () => {
             let influences = [];
             for (const key in this.influence.source) {
                 influences.push(this.influence.source[key]());
+                // console.log(key, ": ", influences[influences.length-1].length());
             }
-            // console.log(influences);
 
             let sum = new THREE.Vector3();
             influences.forEach(influence => {
                 sum.add(influence);
             });
-            return sum.normalize();
+            // console.log(sum);
+            return sum;
         },
         source: {
-            // Alignment: () => {
-            //     // Alignment: Steer towards the average heading of local boids
-            // },
-            // Cohesion: () => {
-            //     // Cohesion: Steer toward center of mass of local boids
-            // },
-            // Separation: () => {
-            //     // Separation: Stear to avoid local boids
-            // },
+            alignment: () => {
+                // Alignment: Steer towards the average heading of local boids
+                const alignment_force = new THREE.Vector3();           
+                const local_fish = this._shoal.filter(fish => fish.position.clone().sub(this.position.clone()).length() < this._vision_range);
+                if (!local_fish.length) return alignment_force;
+
+                local_fish.forEach(fish => {
+                    const alignment = fish.direction.clone();
+                    const separation = this.position.clone().sub(fish.position.clone());
+                    if (separation.length() === 0) alignment_force.add(alignment);
+                    else alignment_force.add(alignment.multiplyScalar(1 / separation.length()));
+                });
+                return alignment_force.multiplyScalar(this._rules_coefficient.alignment).clampLength(0, this._max_rules_strength);
+            },
+            cohesion: () => {
+                // Cohesion: Steer toward center of mass of boids
+                let center_of_mass = new THREE.Vector3();
+                if (!this._shoal.length) return center_of_mass;
+
+                this._shoal.forEach(fish => center_of_mass.add(fish.position));
+                center_of_mass.multiplyScalar(1 / this._shoal.length);
+                const cohesion_force = center_of_mass.sub(this.position) // Vector from this fish to center of mass of shoal
+                return cohesion_force.multiplyScalar(this._rules_coefficient.cohesion).clampLength(0, this._max_rules_strength);
+            },
+            separation: () => {
+                // Separation: Steer to avoid other boids
+                const separation_force = new THREE.Vector3();           
+                const local_fish = this._shoal.filter(fish => fish.position.clone().sub(this.position.clone()).length() < this._vision_range);
+                if (!local_fish.length) return separation_force;
+
+                local_fish.forEach(fish => {
+                    const separation = this.position.clone().sub(fish.position.clone());
+                    if (separation.lengthSq() > 0) separation_force.add(separation.multiplyScalar(2 / separation.lengthSq()));
+                });
+                return separation_force.multiplyScalar(this._rules_coefficient.separation).clampLength(0, this._max_rules_strength);
+            },
             boundary_surface: () => {
                 const separation = this._boundary.surface - this.mesh.position.z;
                 const force = this._boundary_force.surface(separation);
@@ -155,27 +210,50 @@ class Fish {
         }
     }
 
-    propel() {
-        let current_dir = new THREE.Vector3().copy(this._true_north).applyQuaternion(this.mesh.quaternion);
-
-        let new_position = new THREE.Vector3().copy(this.mesh.position).add(current_dir.multiplyScalar(this._linear_speed));
-        this.mesh.position.set(new_position.x, new_position.y, new_position.z);
+    update_position() {
+        const velocity_scale_factor = 1;
+        const scaled_velocity = this.velocity.clone().multiplyScalar(velocity_scale_factor);
+        this.position = this.position.add(scaled_velocity);
     }
+    
+    /**
+     * @param {Vector3} influence The additional velocity from influences
+     */
+    update_velocity() {
+        // Calculate velocity modifiers
+        const damping_coefficient = () => {
+            const current_speed = this.velocity.length();
 
-    swim() {
-        const target_direction = this.influence.compute(); // as Vector3
-        if (this.magnitude(target_direction) > 0) this.turn(target_direction);
-        this.propel();
-    }
+            if (current_speed < this._drag.lower.speed) return this._drag.lower.coefficient;
+            else if (current_speed > this._drag.upper.speed) return this._drag.upper.coefficient;
+            else {
+                const drag_coefficient_range = this._drag.lower.coefficient - this._drag.upper.coefficient;
+                return this._drag.upper.coefficient + (drag_coefficient_range * (1 / (1 + Math.pow((current_speed - this._drag.lower.speed), 2))));
+            }
+        };
 
-    turn(target_dir) {
-        // const force_magnitude = this.magnitude(target_dir);
-        // target_dir.normalize();
-        const quaternion_target = new THREE.Quaternion().setFromUnitVectors(this._true_north, target_dir);
+        const influence = this.influence.compute();
 
-        let current_direction_quaternion = this.mesh.quaternion;
-        current_direction_quaternion.rotateTowards(quaternion_target, this._angular_speed);
-        this.mesh.setRotationFromQuaternion(current_direction_quaternion);
+        // Apply velocity magnitude modifiers
+        let target_velocity = this.velocity.clone();
+        target_velocity.multiplyScalar(damping_coefficient());
+
+        const influence_acceleration_coefficient = 1 + 1.6*Math.tanh(target_velocity.dot(influence)); // plot: https://www.wolframalpha.com/input/?i=y%3D1%2Btanh%28x%2F10%29
+        target_velocity.multiplyScalar(influence_acceleration_coefficient);
+
+        // Apply velocity direction modifier
+        if (influence.lengthSq() !== 0) {
+            const angular_speed = this._maximum_angular_speed * Math.tanh(influence.length()); // Scale angular speed to magnitude of influence
+
+            const target_direction_quaternion = new THREE.Quaternion().setFromUnitVectors(this._true_north, influence.clone().normalize()); // Rotation from North to Traget direction
+            let change_direction_quaternion = new THREE.Quaternion().setFromUnitVectors(this._true_north, target_velocity.clone().normalize()); // Rotation from Noth to current direction
+            change_direction_quaternion.rotateTowards(target_direction_quaternion, angular_speed); // Rotate current direction rotation incrementally toward target direction
+
+            const new_direction = this._true_north.clone().applyQuaternion(change_direction_quaternion).normalize(); // Apply calculated rotation to North to obtain new direction (unit vector)
+            target_velocity = new_direction.multiplyScalar(target_velocity.length()); // Multiply by previous length to maintain speed
+        }
+
+        this.velocity = target_velocity;
     }
 }
 

@@ -11,7 +11,6 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 
 let stop = false;
-let j = 0;
 
 /* Begin Render */
 const render = (num_fish) => {
@@ -30,9 +29,6 @@ const render = (num_fish) => {
     /* animate subject */
     const animate = function () {
         if (stop) return;
-
-        j++;
-        // if (j>10) stop = true;
 
         requestAnimationFrame(animate);
     
