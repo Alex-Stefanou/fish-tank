@@ -12,8 +12,12 @@ const scene = new THREE.Scene();
 
 let stop = false;
 
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /* Begin Render */
-const render = (num_fish) => {
+const render = async (num_fish) => {
     stop = false;
 
     const {boundary, camera} = initialise_scene(scene);
@@ -23,6 +27,8 @@ const render = (num_fish) => {
     for(let i=0; i<num_fish; i++) {
         fish.push(new Fish(i, scene, boundary));
     }
+
+    await sleep(1000);
 
     fish.forEach(f => f.shoal = fish);
 

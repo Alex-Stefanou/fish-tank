@@ -15,7 +15,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	
-	let num_fish = 12;
+	let num_fish = 1;
 
 	const render = () => {
 		dispatch('controls_apply', num_fish);

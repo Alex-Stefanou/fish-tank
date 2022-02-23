@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 class Fish {
     //Const fish properties
@@ -6,7 +7,7 @@ class Fish {
     _boundary_influence_range = {surface: 1, depth: 1, edge: 4};
     _minimum_speed = 0.01;
     _maximum_speed = 0.08;
-    _maximum_angular_speed = 0.08; // Max radians that can be turned in a frame
+    _maximum_angular_speed = 0.02; // Max radians that can be turned in a frame
     _max_influence_strength = 12;
     _max_rules_strength = 4;
     _drag = { // Speeds at which drag becomes constant
@@ -62,19 +63,44 @@ class Fish {
     
 
     _init() {
-        const color = [0xF1948A, 0xA569BD, 0xF7DC6F];
-        const geometry = new THREE.ConeGeometry(0.6, 1.8, 32);
-        const material = new THREE.MeshLambertMaterial({color: color[Math.floor(this.rand_range(0,2))]});
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
+        // const color = [0xF1948A, 0xA569BD, 0xF7DC6F];
+        // const geometry = new THREE.ConeGeometry(0.6, 1.8, 32);
+        // const material = new THREE.MeshLambertMaterial({color: color[Math.floor(this.rand_range(0,2))]});
+        // this.mesh = new THREE.Mesh(geometry, material);
+        // this.mesh.castShadow = true;
+        // this.mesh.receiveShadow = true;
 
-        const initial_position = new THREE.Vector3(0, 0, -2);
-        // const initial_velocity = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,0));
-        const initial_velocity = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), 0);
-        // const initial_velocity = new THREE.Vector3(1, 1, 0);
-        this.position = initial_position;
-        this.velocity = initial_velocity;
+        const set_initial_values = () => {
+            const initial_position = new THREE.Vector3(0, 0, -2);
+            const initial_velocity = new THREE.Vector3(this.rand_range(-1,1), this.rand_range(-1,1), this.rand_range(-1,1));
+            this.position = initial_position;
+            this.velocity = initial_velocity;
+        }
+
+        const loader = new GLTFLoader();
+        loader.load(
+            '../public/assets/models/fish1/scene.gltf',
+            // called when the resource is loaded
+            function ( gltf ) {
+                console.log(gltf);
+                scene.add( gltf.scene );
+                gltf.animations; // Array<THREE.AnimationClip>
+                gltf.scene; // THREE.Group
+                gltf.scenes; // Array<THREE.Group>
+                gltf.cameras; // Array<THREE.Camera>
+                gltf.asset; // Object
+                set_initial_values();
+            },
+            // called while loading is progressing
+            function ( xhr ) {
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            },
+            // called when loading has errors
+            function ( error ) {
+                console.log( 'An error happened' );
+            }
+        );
+        
     }
 
     _boundary_force = {
